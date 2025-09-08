@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Terminal Messenger</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: black;
+      color: lime;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+    }
+    #terminal {
+      white-space: pre-wrap;
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    input {
+      background: black;
+      color: lime;
+      border: none;
+      outline: none;
+      font-family: monospace;
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal">Enter username: </div>
+  <input id="input" type="text">
+
+  <script>
+    const input = document.getElementById('input');
+    const terminal = document.getElementById('terminal');
+    const correctPassword = "secret123"; // 🔑 change this
+    let username = "";
+    let stage = "username";
+
+    window.onload = () => input.focus();
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const value = input.value.trim();
+        input.value = "";
+
+        if (stage === "username") {
+          if (value.length > 0) {
+            username = value;
+            terminal.innerHTML += username + "\nEnter password: ";
+            input.type = "password";
+            stage = "password";
+          } else {
+            terminal.innerHTML += "\nUsername cannot be empty.\nEnter username: ";
+          }
+        }
+
+        else if (stage === "password") {
+          if (value === correctPassword) {
+            // Save username to localStorage and redirect
+            localStorage.setItem("username", username);
+            window.location.href = "chat.html";
+          } else {
+            terminal.innerHTML += "\nAccess denied.\nEnter password: ";
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

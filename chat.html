@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chat - Terminal Messenger</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: black;
+      color: lime;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+    }
+    #terminal {
+      white-space: pre-wrap;
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    input {
+      background: black;
+      color: lime;
+      border: none;
+      outline: none;
+      font-family: monospace;
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal">Welcome to the chat!\n</div>
+  <input id="input" type="text">
+
+  <script>
+    const input = document.getElementById('input');
+    const terminal = document.getElementById('terminal');
+    const username = localStorage.getItem("username") || "Anonymous";
+
+    window.onload = () => input.focus();
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const value = input.value.trim();
+        input.value = "";
+        if (value.length > 0) {
+          const now = new Date();
+          const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          terminal.innerHTML += `[${time}][${username}] ${value}\n`;
+          terminal.scrollTop = terminal.scrollHeight;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
