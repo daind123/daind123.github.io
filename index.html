@@ -53,7 +53,7 @@
 </head>
 <body>
   <div id="terminal">Enter password: </div>
-  <input id="input" type="password" autofocus>
+  <input id="input" type="password">
   <textarea id="notepad" placeholder="Start typing here..."></textarea>
 
   <script>
@@ -61,6 +61,9 @@
     const terminal = document.getElementById('terminal');
     const notepad = document.getElementById('notepad');
     const correctPassword = "secret123"; // 🔑 change this to your own password
+
+    // Ensure input is focused on load
+    window.onload = () => input.focus();
 
     input.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
