@@ -21,7 +21,7 @@
       padding: 20px;
       overflow-y: auto;
     }
-    input {
+    #input {
       background: black;
       color: lime;
       border: none;
@@ -30,65 +30,33 @@
       width: 100%;
       padding: 10px;
       box-sizing: border-box;
+      flex-shrink: 0;
     }
   </style>
 </head>
 <body>
-  <div id="terminal">Welcome to the chat!\n </div>
-  <input id="input" type="text">
+  <div id="terminal">Welcome to the chat!\n</div>
+  <input id="input" type="text" placeholder="Type a message and press Enter...">
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+  <!-- Firebase v8 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
     // 🔥 Replace with your Firebase project config
     const firebaseConfig = {
-  apiKey: "AIzaSyA1pIxohzBdNSGNxj48rgCn4crRgGdOD6k",
-  authDomain: "terminalmessenger.firebaseapp.com",
-  projectId: "terminalmessenger",
-  storageBucket: "terminalmessenger.firebasestorage.app",
-  messagingSenderId: "249387929913",
-  appId: "1:249387929913:web:797225163e5d1e987098e8",
-  measurementId: "G-4RB6P57C0X"
-};
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
     // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     const input = document.getElementById('input');
     const terminal = document.getElementById('terminal');
-    const username = localStorage.getItem("username") || "Anonymous";
-
-    window.onload = () => input.focus();
-
-    // Listen for new messages in Firestore
-    db.collection("messages").orderBy("timestamp")
-      .onSnapshot(snapshot => {
-        terminal.innerHTML = "Welcome to the chat!\n"; // reset and reload
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const time = new Date(data.timestamp?.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          terminal.innerHTML += `[${time}][${data.username}] ${data.text}\n`;
-        });
-        terminal.scrollTop = terminal.scrollHeight;
-      });
-
-    // Send message
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        const value = input.value.trim();
-        input.value = "";
-        if (value.length > 0) {
-          db.collection("messages").add({
-            username: username,
-            text: value,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
-      }
-    });
-  </script>
-</body>
-</html>
+    const usernam
