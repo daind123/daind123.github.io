@@ -20,11 +20,10 @@
   </style>
 </head>
 <body>
+  <div id="terminal"></div>
   <input id="input" type="text" placeholder="Type a message and press Enter" />
 
-  <!-- Firebase + App script -->
   <script type="module">
-    // --- Firebase SDKs (update version if needed) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getFirestore, collection, addDoc, serverTimestamp,
@@ -34,7 +33,7 @@
       getAuth, signInAnonymously
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // --- Your Firebase config (from Firebase Console) ---
+    // --- Firebase config ---
     const firebaseConfig = {
       apiKey: "AIzaSyBu7jyHuv75cHF-efn7h47J8ssxblvvc-g",
       authDomain: "chatroom-72394.firebaseapp.com",
@@ -45,18 +44,18 @@
       measurementId: "G-87ZGW28HXJ"
     };
 
-    // --- Init Firebase, Auth (anonymous), and Firestore ---
+    // --- Init Firebase ---
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
     const auth = getAuth(app);
 
-    // Sign in anonymously so rules requiring auth pass
+    // --- Auth ---
     await signInAnonymously(auth).catch(err => {
       console.error("Auth error:", err);
       alert("Failed to sign in anonymously: " + err.message);
     });
 
-    // --- UI elements + username persistence ---
+    // --- UI ---
     const input = document.getElementById("input");
     const terminal = document.getElementById("terminal");
     let username = localStorage.getItem("username");
@@ -64,17 +63,21 @@
       username = prompt("Enter a username") || "Anonymous";
       localStorage.setItem("username", username);
     }
-    window.onload = () => input.focus();
 
-    // Safe appending helper (avoid innerHTML += ...)
     function appendLine(line) {
       terminal.appendChild(document.createTextNode(line + "\n"));
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    // --- Subscribe to message history + live updates (ordered) ---
+    // Add welcome message on load
+    window.onload = () => {
+      input.focus();
+      appendLine("Welcome to the chat!");
+    };
+
+    // --- Firestore listener ---
     const msgsCol = collection(db, "messages");
-    const q = query(msgsCol, orderBy("ts", "asc"), limit(500)); // adjust limit as needed
+    const q = query(msgsCol, orderBy("ts", "asc"), limit(500));
 
     onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach(change => {
@@ -90,7 +93,7 @@
       appendLine(`[ERROR] Failed to load messages: ${err.message}`);
     });
 
-    // --- Send message: write to Firestore; snapshot renders it ---
+    // --- Sending messages ---
     input.addEventListener("keydown", async (e) => {
       if (e.key !== "Enter") return;
       const value = input.value.trim();
