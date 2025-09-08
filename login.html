@@ -1,78 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login - Terminal Messenger</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
   <style>
-    html, body {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      height: 100%;
-      width: 100%;
-      background: black;
-      color: lime;
-      font-family: monospace;
-      display: flex;
-      flex-direction: column;
     }
-    #terminal {
-      white-space: pre-wrap;
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f9f9f9;
+      color: #111;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 380px;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .container h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: #444;
     }
     input {
-      background: black;
-      color: lime;
-      border: none;
-      outline: none;
-      font-family: monospace;
       width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: #10a37f;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #10a37f;
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0d8a6d;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <div id="terminal">Enter username: </div>
-  <input id="input" type="text">
-
-  <script>
-    const input = document.getElementById('input');
-    const terminal = document.getElementById('terminal');
-    const correctPassword = "123ckp123"; // 🔑 change this
-    let username = "";
-    let stage = "username";
-
-    window.onload = () => input.focus();
-
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        const value = input.value.trim();
-        input.value = "";
-
-        if (stage === "username") {
-          if (value.length > 0) {
-            username = value;
-            terminal.innerHTML += username + "\nEnter password: ";
-            input.type = "password";
-            stage = "password";
-          } else {
-            terminal.innerHTML += "\nUsername cannot be empty.\nEnter username: ";
-          }
-        }
-
-        else if (stage === "password") {
-          if (value === correctPassword) {
-            // Save username to localStorage and redirect
-            localStorage.setItem("username", username);
-            window.location.href = "chat.html";
-          } else {
-            terminal.innerHTML += "\nAccess denied.\nEnter password: ";
-          }
-        }
-      }
-    });
-  </script>
+  <div class="container">
+    <h1>Sign in</h1>
+    <form>
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter username" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password" required />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <div class="footer">
+      Don’t have an account? <a href="#">Sign up</a>
+    </div>
+  </div>
 </body>
 </html>
