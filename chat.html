@@ -37,22 +37,54 @@
   <div id="terminal">Welcome to the chat!\n</div>
   <input id="input" type="text">
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+
   <script>
+    // 🔥 Replace with your Firebase project config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const input = document.getElementById('input');
     const terminal = document.getElementById('terminal');
     const username = localStorage.getItem("username") || "Anonymous";
 
     window.onload = () => input.focus();
 
+    // Listen for new messages in Firestore
+    db.collection("messages").orderBy("timestamp")
+      .onSnapshot(snapshot => {
+        terminal.innerHTML = "Welcome to the chat!\n"; // reset and reload
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const time = new Date(data.timestamp?.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          terminal.innerHTML += `[${time}][${data.username}] ${data.text}\n`;
+        });
+        terminal.scrollTop = terminal.scrollHeight;
+      });
+
+    // Send message
     input.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
         const value = input.value.trim();
         input.value = "";
         if (value.length > 0) {
-          const now = new Date();
-          const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          terminal.innerHTML += `[${time}][${username}] ${value}\n`;
-          terminal.scrollTop = terminal.scrollHeight;
+          db.collection("messages").add({
+            username: username,
+            text: value,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
         }
       }
     });
