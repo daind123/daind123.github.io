@@ -1,65 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Chat - Terminal Messenger</title>
+  <meta charset="UTF-8" />
+  <title>Chat - Terminal Messenger (Firebase)</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background: black;
-      color: lime;
-      font-family: monospace;
-      display: flex;
-      flex-direction: column;
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      background: black; color: lime; font-family: monospace;
+      display: flex; flex-direction: column;
     }
     #terminal {
       white-space: pre-wrap;
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
+      flex: 1; padding: 20px; overflow-y: auto;
     }
     input {
-      background: black;
-      color: lime;
-      border: none;
-      outline: none;
-      font-family: monospace;
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
+      background: black; color: lime; border: none; outline: none;
+      font-family: monospace; width: 100%; padding: 10px; box-sizing: border-box;
     }
   </style>
 </head>
 <body>
   <div id="terminal">Welcome to the chat!\n</div>
-  <input id="input" type="text">
+  <input id="input" type="text" placeholder="Type a message and press Enter" />
 
-  <script>
-    const input = document.getElementById('input');
-    const terminal = document.getElementById('terminal');
-    const username = localStorage.getItem("username") || "Anonymous";
+  <!-- Firebase + App script -->
+  <script type="module">
+    // --- Firebase SDKs (update version if needed) ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, orderBy, limit, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getAuth, signInAnonymously
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+    // --- Your Firebase config (from Firebase Console) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBu7jyHuv75cHF-efn7h47J8ssxblvvc-g",
+      authDomain: "chatroom-72394.firebaseapp.com",
+      projectId: "chatroom-72394",
+      storageBucket: "chatroom-72394.firebasestorage.app",
+      messagingSenderId: "80818380597",
+      appId: "1:80818380597:web:4c2f04fd1c92a0f39db67c",
+      measurementId: "G-87ZGW28HXJ"
+    };
+
+    // --- Init Firebase, Auth (anonymous), and Firestore ---
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Sign in anonymously so rules requiring auth pass
+    await signInAnonymously(auth).catch(err => {
+      console.error("Auth error:", err);
+      alert("Failed to sign in anonymously: " + err.message);
+    });
+
+    // --- UI elements + username persistence ---
+    const input = document.getElementById("input");
+    const terminal = document.getElementById("terminal");
+    let username = localStorage.getItem("username");
+    if (!username) {
+      username = prompt("Enter a username") || "Anonymous";
+      localStorage.setItem("username", username);
+    }
     window.onload = () => input.focus();
 
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        const value = input.value.trim();
-        input.value = "";
-        if (value.length > 0) {
-          const now = new Date();
-          const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          terminal.innerHTML += `[${time}][${username}] ${value}\n`;
-          terminal.scrollTop = terminal.scrollHeight;
+    // Safe appending helper (avoid innerHTML += ...)
+    function appendLine(line) {
+      terminal.appendChild(document.createTextNode(line + "\n"));
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // --- Subscribe to message history + live updates (ordered) ---
+    const msgsCol = collection(db, "messages");
+    const q = query(msgsCol, orderBy("ts", "asc"), limit(500)); // adjust limit as needed
+
+    onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          const m = change.doc.data();
+          const when = m.ts?.toDate ? m.ts.toDate() : new Date();
+          const hhmm = when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          appendLine(`[${hhmm}][${m.user || "Anonymous"}] ${m.text}`);
         }
+      });
+    }, (err) => {
+      console.error("onSnapshot error:", err);
+      appendLine(`[ERROR] Failed to load messages: ${err.message}`);
+    });
+
+    // --- Send message: write to Firestore; snapshot renders it ---
+    input.addEventListener("keydown", async (e) => {
+      if (e.key !== "Enter") return;
+      const value = input.value.trim();
+      input.value = "";
+      if (!value) return;
+
+      try {
+        await addDoc(msgsCol, {
+          text: value,
+          user: username,
+          ts: serverTimestamp()
+        });
+      } catch (err) {
+        appendLine(`[ERROR] Failed to send: ${err.message}`);
       }
     });
   </script>
 </body>
 </html>
-
-
-
-
