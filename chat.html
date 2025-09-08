@@ -1,115 +1,194 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Chat - Terminal Messenger (Firebase)</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%; width: 100%;
-      background: black; color: lime; font-family: monospace;
-      display: flex; flex-direction: column;
-    }
-    #terminal {
-      white-space: pre-wrap;
-      flex: 1; padding: 20px; overflow-y: auto;
-    }
-    input {
-      background: black; color: lime; border: none; outline: none;
-      font-family: monospace; width: 100%; padding: 10px; box-sizing: border-box;
-    }
-  </style>
-</head>
-<body>
-  <div id="terminal"></div>
-  <input id="input" type="text" placeholder="Type a message and press Enter" />
+<html lang=\"en\">
+  <head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+    <title>Chat • Terminal Messenger</title>
+    <style>
+      :root{
+        --bg:#f7f7f8;
+        --msg:#ffffff;
+        --mine:#e9f4ff;
+        --text:#111;
+        --muted:#6b7280;
+        --border:#e5e7eb;
+        --accent:#10a37f;
+      }
+      *{box-sizing:border-box}
+      html,body{
+        height:100%;
+        margin:0;
+        font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, \"Apple Color Emoji\", \"Segoe UI Emoji\";
+        color:var(--text);
+        background:var(--bg);
+      }
+      .app{ height:100%; display:flex; flex-direction:column; }
+      .topbar{
+        position:sticky; top:0; z-index:10;
+        display:flex; align-items:center; gap:.6rem;
+        padding:12px 16px;
+        background:#fff; border-bottom:1px solid var(--border);
+      }
+      .topbar .title{ font-weight:600; }
+      .container{ width:100%; max-width:900px; margin:0 auto; }
+      .messages{ flex:1; overflow-y:auto; padding:16px; }
+      .msg-row{ display:flex; gap:12px; margin:10px 0; align-items:flex-start; }
+      .msg-row.mine{ flex-direction:row-reverse; }
+      .avatar{
+        width:36px; height:36px; border-radius:50%;
+        background:#d1d5db; display:flex; align-items:center; justify-content:center;
+        font-weight:700; color:#111; flex:0 0 36px; user-select:none;
+      }
+      .bubble{
+        background:var(--msg); border:1px solid var(--border);
+        border-radius:16px; padding:10px 14px;
+        max-width:min(85%, 720px);
+        box-shadow: 0 1px 0 rgba(0,0,0,.02);
+        white-space:pre-wrap; word-wrap:break-word; overflow-wrap:anywhere;
+      }
+      .msg-row.mine .bubble{ background:var(--mine); }
+      .meta{ font-size:12px; color:var(--muted); margin-bottom:4px; }
+      .composer-wrap{
+        position:sticky; bottom:0;
+        background:linear-gradient(180deg, rgba(247,247,248,0) 0%, var(--bg) 22%);
+        padding:12px 16px 16px; border-top:1px solid var(--border);
+      }
+      .composer{ display:flex; gap:8px; align-items:flex-end; background:#fff; border:1px solid var(--border); border-radius:14px; padding:8px; }
+      textarea{
+        width:100%; min-height:24px; max-height:180px; resize:none; border:none; outline:none; padding:8px 10px; font:inherit; line-height:1.35;
+      }
+      .send{ flex:0 0 auto; border:none; background:var(--accent); color:white; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+      .hint{ text-align:right; color:var(--muted); font-size:12px; margin-top:6px; }
+      .empty{ text-align:center; color:var(--muted); margin-top:24px; }
+    </style>
+  </head>
+  <body>
+    <div class=\"app\">
+      <div class=\"topbar\">
+        <div class=\"container\"><div class=\"title\">Terminal Messenger</div></div>
+      </div>
+      <div id=\"messages\" class=\"messages container\" aria-live=\"polite\"></div>
+      <div class=\"composer-wrap\">
+        <div class=\"container\">
+          <form id=\"composer\" class=\"composer\">
+            <textarea id=\"input\" placeholder=\"Type a message… (Enter to send, Shift+Enter for a new line)\" autocomplete=\"off\"></textarea>
+            <button id=\"sendBtn\" class=\"send\" type=\"submit\" aria-label=\"Send message\">Send</button>
+          </form>
+          <div class=\"hint\">Press <strong>Enter</strong> to send • <strong>Shift+Enter</strong> for a new line</div>
+        </div>
+      </div>
+    </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, serverTimestamp,
-      query, orderBy, limit, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getAuth, signInAnonymously
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    <script type=\"module\">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+      import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
-    // --- Firebase config ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyBu7jyHuv75cHF-efn7h47J8ssxblvvc-g",
-      authDomain: "chatroom-72394.firebaseapp.com",
-      projectId: "chatroom-72394",
-      storageBucket: "chatroom-72394.firebasestorage.app",
-      messagingSenderId: "80818380597",
-      appId: "1:80818380597:web:4c2f04fd1c92a0f39db67c",
-      measurementId: "G-87ZGW28HXJ"
-    };
+      const firebaseConfig = {
+        apiKey: \"AIzaSyA1pIxohzBdNSGNxj48rgCn4crRgGdOD6k\",
+        authDomain: \"terminalmessenger.firebaseapp.com\",
+        projectId: \"terminalmessenger\",
+        storageBucket: \"terminalmessenger.firebasestorage.app\",
+        messagingSenderId: \"249387929913\",
+        appId: \"1:249387929913:web:797225163e5d1e987098e8\",
+        measurementId: \"G-4RB6P57C0X\"
+      };
 
-    // --- Init Firebase ---
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-    const auth = getAuth(app);
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
 
-    // --- Auth ---
-    await signInAnonymously(auth).catch(err => {
-      console.error("Auth error:", err);
-      alert("Failed to sign in anonymously: " + err.message);
-    });
+      const $messages = document.getElementById('messages');
+      const $composer = document.getElementById('composer');
+      const $input = document.getElementById('input');
+      const username = localStorage.getItem('username') || 'Anonymous';
 
-    // --- UI ---
-    const input = document.getElementById("input");
-    const terminal = document.getElementById("terminal");
-    let username = localStorage.getItem("username");
-    if (!username) {
-      username = prompt("Enter a username") || "Anonymous";
-      localStorage.setItem("username", username);
-    }
+      const initial = (name) => (name?.trim()?.[0] || '?').toUpperCase();
+      const isMine = (user) => (user || 'Anonymous') === username;
 
-    function appendLine(line) {
-      terminal.appendChild(document.createTextNode(line + "\n"));
-      terminal.scrollTop = terminal.scrollHeight;
-    }
+      function formatTime(date){
+        try{ return new Intl.DateTimeFormat([], { hour:'2-digit', minute:'2-digit' }).format(date); }
+        catch(_){ return date.toLocaleTimeString(); }
+      }
 
-    // Add welcome message on load
-    window.onload = () => {
-      input.focus();
-      appendLine("Welcome to the chat!");
-    };
+      function renderEmpty(){
+        $messages.innerHTML = '<div class=\"empty\">No messages yet. Say hello! 👋</div>';
+      }
 
-    // --- Firestore listener ---
-    const msgsCol = collection(db, "messages");
-    const q = query(msgsCol, orderBy("ts", "asc"), limit(500));
+      function renderMessages(docs){
+        if (!docs.length) { renderEmpty(); return; }
+        const frag = document.createDocumentFragment();
+        docs.forEach(d => {
+          const m = d.data();
+          const when = m.ts && typeof m.ts.toDate === 'function' ? m.ts.toDate() : new Date();
+          const user = m.user || 'Anonymous';
+          const text = m.text || '';
 
-    onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach(change => {
-        if (change.type === "added") {
-          const m = change.doc.data();
-          const when = m.ts?.toDate ? m.ts.toDate() : new Date();
-          const hhmm = when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          appendLine(`[${hhmm}][${m.user || "Anonymous"}] ${m.text}`);
+          const row = document.createElement('div');
+          row.className = 'msg-row' + (isMine(user) ? ' mine' : '');
+
+          const avatar = document.createElement('div');
+          avatar.className = 'avatar';
+          avatar.textContent = initial(user);
+
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble';
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = user + ' • ' + formatTime(when);
+          const body = document.createElement('div');
+          body.textContent = text;
+
+          bubble.appendChild(meta);
+          bubble.appendChild(body);
+
+          row.appendChild(avatar);
+          row.appendChild(bubble);
+          frag.appendChild(row);
+        });
+        $messages.innerHTML = '';
+        $messages.appendChild(frag);
+        $messages.scrollTop = $messages.scrollHeight;
+      }
+
+      const messagesRef = collection(db, 'messages');
+      const qy = query(messagesRef, orderBy('ts', 'asc'));
+      onSnapshot(qy, (snap) => {
+        renderMessages(snap.docs);
+      }, (err) => {
+        console.error(err);
+        $messages.innerHTML = '<div class=\"empty\">Failed to load messages. Check console.</div>';
+      });
+
+      function autoResize(){
+        $input.style.height = 'auto';
+        $input.style.height = Math.min($input.scrollHeight, 180) + 'px';
+      }
+      $input.addEventListener('input', autoResize);
+      window.addEventListener('load', () => { $input.focus(); autoResize(); });
+
+      async function sendMessage(){
+        const value = $input.value.replace(/\r/g, '');
+        const text = value.trim();
+        if (!text) return;
+        $input.value = '';
+        autoResize();
+        try{
+          await addDoc(messagesRef, { text, user: username, ts: serverTimestamp() });
+        }catch(err){
+          console.error(err);
+        }
+      }
+
+      $composer.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendMessage();
+      });
+
+      $input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
         }
       });
-    }, (err) => {
-      console.error("onSnapshot error:", err);
-      appendLine(`[ERROR] Failed to load messages: ${err.message}`);
-    });
-
-    // --- Sending messages ---
-    input.addEventListener("keydown", async (e) => {
-      if (e.key !== "Enter") return;
-      const value = input.value.trim();
-      input.value = "";
-      if (!value) return;
-
-      try {
-        await addDoc(msgsCol, {
-          text: value,
-          user: username,
-          ts: serverTimestamp()
-        });
-      } catch (err) {
-        appendLine(`[ERROR] Failed to send: ${err.message}`);
-      }
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
