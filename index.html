@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Terminal Notepad</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: black;
+      color: lime;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #terminal {
+      white-space: pre-wrap;
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    input {
+      background: black;
+      color: lime;
+      border: none;
+      outline: none;
+      font-family: monospace;
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    #notepad {
+      display: none;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: black;
+      color: lime;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: monospace;
+      font-size: 16px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal">Enter password: </div>
+  <input id="input" type="password" autofocus>
+  <textarea id="notepad" placeholder="Start typing here..."></textarea>
+
+  <script>
+    const input = document.getElementById('input');
+    const terminal = document.getElementById('terminal');
+    const notepad = document.getElementById('notepad');
+    const correctPassword = "secret123"; // 🔑 change this to your own password
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const pwd = input.value;
+        input.value = "";
+        if (pwd === correctPassword) {
+          // Clear screen and switch to notepad
+          terminal.innerHTML = "Access granted.\nWelcome!\n\n";
+          input.style.display = "none";
+          terminal.style.display = "none";
+          notepad.style.display = "block";
+          notepad.focus();
+        } else {
+          terminal.innerHTML += "\nAccess denied.\nEnter password: ";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
